@@ -6,9 +6,16 @@ public class player_fsm : MonoBehaviour
 {
 
     //private static bool isDone;
-    private int Done;
     private List<GameObject> machineDone;
     public machine_fsm machine;
+
+    private int useTime;
+    private int rand;
+    private GameObject machineHitByRay;
+    private Vector3 raypos;
+    private Camera mainCam;
+    private RaycastHit hit;
+
 
    public enum PlayerState
     {
@@ -29,7 +36,7 @@ public class player_fsm : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        mainCam = Camera.main;
     }
 
     private void Update()
@@ -37,15 +44,17 @@ public class player_fsm : MonoBehaviour
         // Checks if the player is done
         isDone();
 
+        machineHit();
+        
         switch (state)
         {
             case PlayerState.pStandby:
                 pStandBy();
                 break;
 
-            //case PlayerState.pInUse:
-            //    pInUse();
-            //    break;
+            case PlayerState.pInUse:
+                pInUse(machineHitByRay);
+                break;
 
             case PlayerState.pUseMachine:
                 pUseMachine();
@@ -108,48 +117,50 @@ public class player_fsm : MonoBehaviour
         
     }
 
-    void pInUse(machine_fsm machineSelected)
+    void pInUse(GameObject machineSelected)
     {
-        //Player clicks on machine, return the type of machine
-        if (machineSelected)
+        machine = machineSelected.GetComponent<machine_fsm>();
+        // Checks if machine contains the script to interact with
+        if (machine)
         {
-            // need to check if the machine has been used by the player before
             // Checks if the machine is in use.
-            if (machineSelected.mInUse())
+            if (machine.CheckState() == machine_fsm.MachineState.InUse)
             {
                 // Player cant use and game tells the player so
                 // Add the selected machine to the list of machines the player has done
                 state = PlayerState.pStandby;
-                //break;
+                
             }
             else
             {
                 //Player can use the machine
                 state = PlayerState.pUseMachine;
-                //break;
+                
             }
         }
     }
 
     void pUseMachine()
     {
-        //Counts down from 8 seconds, maybe we can use a coroutine here to force this game object to wait 8 seconds before doing the next thing
+        StartCoroutine(StartUsage());
 
-        //if(useTime == 8)
-        //{
-        //    if(chance = 30 %)
-        //    {
-        //        state = PlayerState.pTired
-        //    }
-        //    else if(chance = 10 %)
-        //    {
-        //        state = PlayerState.pInjury
-        //    }
-        //    else
-        //    {
-        //        state = PlayerState.pStandby
-        //    }
-        //}
+        rand = Random.Range(1, 11);
+
+        if (useTime >= 8)
+        {
+            if (rand <= 1) // Chance ~ 10% to get injured
+            {
+                state = PlayerState.pInjury;
+            }
+            else if (rand <= 4) // Chance ~ 30% to get tired
+            {
+                state = PlayerState.pTired;
+            }
+            else
+            {
+                state = PlayerState.pStandby;
+            }
+        }
     }
 
     // Tired
@@ -177,20 +188,21 @@ public class player_fsm : MonoBehaviour
     // Injured
     void pInjury()
     {
-        // Use the pain spray
-        //if(serious < 20% )
-        //{
-        //    state = PlayerState.pHospital;
-        //}
-        //else
-        //{
-        //    state = PlayerState.pFirstAid
-        //}
+        //Use the pain spray
+        rand = Random.Range(1, 11);
+        if (rand <= 2 )
+        {
+            state = PlayerState.pHospital;
+        }
+        else
+        {
+            state = PlayerState.pFirstAid;
+        }
     }
 
     void pFirstAid()
     {
-        // Use the pain spray
+        // Use the pain spray, a ui pops to prompt the player to use the pain spray
         state = PlayerState.pStandby;
     }
 
@@ -203,5 +215,51 @@ public class player_fsm : MonoBehaviour
     void pExit()
     {
         //Player is done and moves to the exit.
+    }
+
+    private GameObject machineHit()
+    {
+        // Changes: Cached the variable and renamed it to be more obvious what it contains
+        machineHitByRay = null;
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            // Changes: Cached the variable and RaycastHit hit is now declared outside the function
+            raypos = mainCam.ScreenToWorldPoint(Input.mousePosition);
+
+            if (Physics.Raycast(raypos, Vector3.forward, out hit, Mathf.Infinity))
+            {
+                if (hit.collider != null)
+                {
+                    machineHitByRay = hit.collider.gameObject; //returns the frame hit
+
+                }
+            }
+        }
+        return machineHitByRay;
+    }
+
+    IEnumerator StartUsage()
+    {
+        // This function is here to force the whole script to wait for the MachineInUse() coroutine to run its entire course
+        yield return StartCoroutine(MachineInUse());
+    }
+
+    IEnumerator MachineInUse()
+    {
+        for (; ; )
+        {
+            if (useTime < 8)
+            {
+                // if usage time is less than 8, add 1 to it, then wait for 1 second
+                useTime += 1;
+                yield return new WaitForSeconds(1f);
+            }
+            else
+            {
+                // This runs when useTime > 8
+                yield break;
+            }
+        }
     }
 }
