@@ -1156,6 +1156,27 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 7429428458962440844}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &854215058
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 854215057}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4495ee99d541f384bbd554a9e45f046b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MachinesChoice:
+  - {fileID: 1678385596}
+  - {fileID: 178643144}
+  - {fileID: 963055523}
+  - {fileID: 972723809}
+  - {fileID: 1566389153}
+  - {fileID: 439755404}
+  - {fileID: 563703304}
+  - {fileID: 703805693}
 --- !u!195 &854215060
 NavMeshAgent:
   m_ObjectHideFlags: 0

@@ -42,6 +42,7 @@ public class player_fsm : MonoBehaviour
         StartCoroutine(CurrentState());
 
         machineDone = new List<GameObject>();
+
         // References the camera
         mainCam = Camera.main;
 
@@ -140,6 +141,7 @@ public class player_fsm : MonoBehaviour
     {
         Debug.Log("pInUse is called");
         machine = machineSelected.GetComponent<machine_fsm>();
+
         // Checks if machine contains the script to interact with
         if (machine)
         {
@@ -153,7 +155,8 @@ public class player_fsm : MonoBehaviour
             }
             else
             {
-                if (machine.alreadyUsed)
+                // The if statement should be outside the InUse Check
+                if (machine.alreadyUsed) // I need to use a list instead
                 {
                     // Player cant use and game tells the player so
                     Debug.Log("You can't use this as you have done this before");
@@ -163,7 +166,7 @@ public class player_fsm : MonoBehaviour
                 {
                     Debug.Log("Sending message to machine script");
                     machine.UseMachine();
-                    
+                    machineDone.Add(machineSelected);
                     
                     state = PlayerState.UseMachine;
                 }

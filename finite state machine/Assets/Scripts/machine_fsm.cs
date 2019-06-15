@@ -93,7 +93,7 @@ public class machine_fsm : MonoBehaviour
         }
         else
         {
-            
+            Debug.Log("Called");
             state = MachineState.Standby;
         }
     }
