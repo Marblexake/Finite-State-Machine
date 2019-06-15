@@ -8,14 +8,16 @@ public class player_fsm : MonoBehaviour
     //private static bool isDone;
     private int Done;
     private List<GameObject> machineDone;
-    public machine_fsm machine;
+    private machine_fsm machine;
 
     private int useTime;
     private int rand;
     private GameObject machineHitByRay;
-    private Vector3 raypos;
+
     private Camera mainCam;
-    private RaycastHit hit;
+    private bool doingSomething = false;
+
+    //private int use = 2;
 
 
    public enum PlayerState
@@ -37,11 +39,15 @@ public class player_fsm : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        StartCoroutine(CurrentState());
+
+        machineDone = new List<GameObject>();
         // References the camera
         mainCam = Camera.main;
 
+        state = PlayerState.Standby;
         // Makes sure the list is completely clear
-        machineDone.Clear();
+        // machineDone.Clear();
     }
 
     private void Update()
@@ -50,7 +56,7 @@ public class player_fsm : MonoBehaviour
         isDone();
 
         // Runs every frame, checks if the player has clicked, and if he did, return what he clicked.
-        machineHit();
+        machineHitByRay = machineHit();
         
         switch (state)
         {
@@ -107,11 +113,15 @@ public class player_fsm : MonoBehaviour
 
     void pStandBy()
     {
+        //Debug.Log("Stand By Called");
         // This can be a coroutine where the player can stay afk until he decides to click on something then it exits the coroutine.
         // Movement code to move to standby area
-        //pInUse();
 
-        // Code that makes the player move around the area randomly
+        if (Input.GetMouseButtonDown(0) && machineHitByRay)
+        {
+            Debug.Log(machineHitByRay);
+            state = PlayerState.InUse;
+        }
     }
 
     void isDone()
@@ -128,6 +138,7 @@ public class player_fsm : MonoBehaviour
 
     void pInUse(GameObject machineSelected)
     {
+        Debug.Log("pInUse is called");
         machine = machineSelected.GetComponent<machine_fsm>();
         // Checks if machine contains the script to interact with
         if (machine)
@@ -135,42 +146,56 @@ public class player_fsm : MonoBehaviour
             // Checks if the machine is in use.
             if (machine.CheckState() == machine_fsm.MachineState.InUse)
             {
-                // Player cant use and game tells the player so
-
-                // Add the selected machine to the list of machines the player has done
-                machineDone.Add(machineSelected);
-
+                Debug.Log("Machine is currently in use, you can't use it now");
                 // The state transition
-                state = PlayerState.Standby;
-                
+                state = PlayerState.Standby;         
+
             }
             else
             {
-                // State Transition
-                state = PlayerState.UseMachine;
-                
+                if (machine.alreadyUsed)
+                {
+                    // Player cant use and game tells the player so
+                    Debug.Log("You can't use this as you have done this before");
+                    state = PlayerState.Standby;
+                }
+                else
+                {
+                    Debug.Log("Sending message to machine script");
+                    machine.UseMachine();
+                    
+                    
+                    state = PlayerState.UseMachine;
+                }
+               
             }
+
         }
     }
 
-    void pUseMachine()
+    public void pUseMachine()
     {
-        StartCoroutine(StartUsage());
-
+        if(doingSomething == false)
+        {
+            StartCoroutine(PlayerStartUsage());
+            doingSomething = true;
+        }
+        
         rand = Random.Range(1, 11);
 
         if (useTime >= 8)
         {
-            if (rand <= 1) // Chance ~ 10% to get injured
+            if (false) //rand <= 1) // Chance ~ 10% to get injured
             {
                 state = PlayerState.Injury;
             }
-            else if (rand <= 4) // Chance ~ 30% to get tired
+            else if (false) //rand <= 4) // Chance ~ 30% to get tired
             {
                 state = PlayerState.Tired;
             }
             else
             {
+                machineHitByRay = null;
                 state = PlayerState.Standby;
             }
         }
@@ -232,27 +257,27 @@ public class player_fsm : MonoBehaviour
 
     private GameObject machineHit()
     {
-        // Changes: Cached the variable and renamed it to be more obvious what it contains
-        machineHitByRay = null;
-
         if (Input.GetMouseButtonDown(0))
         {
             // Changes: Cached the variable and RaycastHit hit is now declared outside the function
-            raypos = mainCam.ScreenToWorldPoint(Input.mousePosition);
+            Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
 
-            if (Physics.Raycast(raypos, Vector3.forward, out hit, Mathf.Infinity))
+            //Debug.Log("Mouse was clicked");
+
+            if (Physics.Raycast(ray, out RaycastHit hit))
             {
+                //Debug.Log("Ray was cast");
                 if (hit.collider != null)
                 {
-                    machineHitByRay = hit.collider.gameObject; //returns the frame hit
-
+                    machineHitByRay = hit.collider.gameObject; 
+                    //Debug.Log("There's a hit! This was the result: " + machineHitByRay);
                 }
             }
         }
         return machineHitByRay;
     }
 
-    IEnumerator StartUsage()
+    IEnumerator PlayerStartUsage()
     {
         // This function is here to force the whole script to wait for the MachineInUse() coroutine to run its entire course
         yield return StartCoroutine(MachineInUse());
@@ -260,19 +285,35 @@ public class player_fsm : MonoBehaviour
 
     IEnumerator MachineInUse()
     {
+        // Runs forever
         for (; ; )
         {
             if (useTime < 8)
             {
                 // if usage time is less than 8, add 1 to it, then wait for 1 second
                 useTime += 1;
+                Debug.Log("Player script time: " + useTime);
                 yield return new WaitForSeconds(1f);
             }
             else
             {
                 // This runs when useTime > 8
+                Debug.Log("(PlayerScript)Machine usage is now done");
+                // Resets the counter and then break the loop, effectively ending this coroutine
+                doingSomething = false;
+                useTime = 0;
                 yield break;
             }
+        }
+    }
+
+
+    IEnumerator CurrentState()
+    {
+        for (; ; )
+        {
+            Debug.Log(state);
+            yield return new WaitForSeconds(1);
         }
     }
 }

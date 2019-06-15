@@ -14,11 +14,11 @@ TagManager:
   - 
   - 
   - PostProcessing
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Player
+  - Walkable Area
+  - Unwalkable
+  - NPC
+  - Worker
   - 
   - 
   - 

@@ -20,6 +20,13 @@ public class machine_fsm : MonoBehaviour
     private bool startUse;
     private int rand;
 
+    public bool alreadyUsed;
+
+    private void Start()
+    {
+        state = MachineState.Standby;
+    }
+
     void Update()
     {
         switch (state)
@@ -63,10 +70,12 @@ public class machine_fsm : MonoBehaviour
     void mStandBy()
     {
         // the machine waits for player input
+        // Debug.Log("Machine current state is stand by");
     }
 
     public void mInUse()
     {
+        Debug.Log("Machine current state is InUse");
         // Starts the coroutine that waits for the MachineInUse to be completed, since the game requires the player to wait for 
         // the character to finish the machine, which basically is just 8 seconds of waiting.
         StartCoroutine(StartUsage());
@@ -74,14 +83,17 @@ public class machine_fsm : MonoBehaviour
         // A random number is generated to simulate chance
         rand = Random.Range(1, 11);
 
+        alreadyUsed = true;
+
         // If the rand no. is less than or equals to 2 (so technically 20%), transition state to broken, else just go back to being 
         //on Standby for player input 
-        if(rand <= 2)
+        if(false) //rand <= 2)
         {
             state = MachineState.Broken;
         }
         else
         {
+            
             state = MachineState.Standby;
         }
     }
@@ -132,11 +144,13 @@ public class machine_fsm : MonoBehaviour
             {
                 // if usage time is less than 8, add 1 to it, then wait for 1 second
                 useTime += 1;
-                yield return new WaitForSeconds(1f);
+                Debug.Log("Machine Script time: " + useTime);
+                yield return new WaitForSeconds(1);
             }
             else
             {
                 // This runs when useTime > 8
+                Debug.Log("(MachineScript)Machine usage is now done");
                 useTime = 0;
                 yield break;
             }
