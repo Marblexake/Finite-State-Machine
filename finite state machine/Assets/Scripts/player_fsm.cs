@@ -6,6 +6,7 @@ public class player_fsm : MonoBehaviour
 {
 
     //private static bool isDone;
+    private int Done;
     private List<GameObject> machineDone;
     public machine_fsm machine;
 
@@ -19,16 +20,16 @@ public class player_fsm : MonoBehaviour
 
    public enum PlayerState
     {
-        pStandby,
-        pInUse,
-        pUseMachine,
-        pTired,
-        pGetFood,
-        pEat,
-        pInjury,
-        pFirstAid,
-        pHospital,
-        pExit
+        Standby,
+        InUse,
+        UseMachine,
+        Tired,
+        GetFood,
+        Eat,
+        Injury,
+        FirstAid,
+        Hospital,
+        Exit
     }
 
     static PlayerState state;
@@ -36,7 +37,11 @@ public class player_fsm : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // References the camera
         mainCam = Camera.main;
+
+        // Makes sure the list is completely clear
+        machineDone.Clear();
     }
 
     private void Update()
@@ -44,52 +49,53 @@ public class player_fsm : MonoBehaviour
         // Checks if the player is done
         isDone();
 
+        // Runs every frame, checks if the player has clicked, and if he did, return what he clicked.
         machineHit();
         
         switch (state)
         {
-            case PlayerState.pStandby:
+            case PlayerState.Standby:
                 pStandBy();
                 break;
 
-            case PlayerState.pInUse:
+            case PlayerState.InUse:
                 pInUse(machineHitByRay);
                 break;
 
-            case PlayerState.pUseMachine:
+            case PlayerState.UseMachine:
                 pUseMachine();
                 break;
 
-            case PlayerState.pTired:
+            case PlayerState.Tired:
                 pTired();
                 break;
 
-            case PlayerState.pGetFood:
+            case PlayerState.GetFood:
                 pGetFood();
                 break;
 
-            case PlayerState.pEat:
+            case PlayerState.Eat:
                 pEat();
                 break;
 
-            case PlayerState.pInjury:
+            case PlayerState.Injury:
                 pInjury();
                 break;
 
-            case PlayerState.pFirstAid:
+            case PlayerState.FirstAid:
                 pFirstAid();
                 break;
 
-            case PlayerState.pHospital:
+            case PlayerState.Hospital:
                 pHospital();
                 break;
 
-            case PlayerState.pExit:
+            case PlayerState.Exit:
                 break;
 
             default:
                 pStandBy();
-                Debug.Log("No state");
+                Debug.Log("Player Error, No state");
                 break;
         }
     }
@@ -110,9 +116,12 @@ public class player_fsm : MonoBehaviour
 
     void isDone()
     {
+        
+        //Done = machineDone.Count;
+
         if(Done == 8)
         {
-            state = PlayerState.pExit;
+            state = PlayerState.Exit;
         }
         
     }
@@ -127,14 +136,18 @@ public class player_fsm : MonoBehaviour
             if (machine.CheckState() == machine_fsm.MachineState.InUse)
             {
                 // Player cant use and game tells the player so
+
                 // Add the selected machine to the list of machines the player has done
-                state = PlayerState.pStandby;
+                machineDone.Add(machineSelected);
+
+                // The state transition
+                state = PlayerState.Standby;
                 
             }
             else
             {
-                //Player can use the machine
-                state = PlayerState.pUseMachine;
+                // State Transition
+                state = PlayerState.UseMachine;
                 
             }
         }
@@ -150,15 +163,15 @@ public class player_fsm : MonoBehaviour
         {
             if (rand <= 1) // Chance ~ 10% to get injured
             {
-                state = PlayerState.pInjury;
+                state = PlayerState.Injury;
             }
             else if (rand <= 4) // Chance ~ 30% to get tired
             {
-                state = PlayerState.pTired;
+                state = PlayerState.Tired;
             }
             else
             {
-                state = PlayerState.pStandby;
+                state = PlayerState.Standby;
             }
         }
     }
@@ -168,21 +181,21 @@ public class player_fsm : MonoBehaviour
     {
         //Player is now tired it tells the player it is now tired
         // Movement code to move to the standby area
-        state = PlayerState.pGetFood;
+        state = PlayerState.GetFood;
     }
 
     void pGetFood()
     {
         // Player has to click on the vending machine to get the food.
         // Movement code
-        state = PlayerState.pEat;
+        state = PlayerState.Eat;
     }
 
     void pEat()
     {
         // Character eats the food
         // Nom nom words, and UI 
-        state = PlayerState.pStandby;
+        state = PlayerState.Standby;
     }
 
     // Injured
@@ -192,24 +205,24 @@ public class player_fsm : MonoBehaviour
         rand = Random.Range(1, 11);
         if (rand <= 2 )
         {
-            state = PlayerState.pHospital;
+            state = PlayerState.Hospital;
         }
         else
         {
-            state = PlayerState.pFirstAid;
+            state = PlayerState.FirstAid;
         }
     }
 
     void pFirstAid()
     {
         // Use the pain spray, a ui pops to prompt the player to use the pain spray
-        state = PlayerState.pStandby;
+        state = PlayerState.Standby;
     }
 
     void pHospital()
     {
         // Game fades to black, and reappears after 10 seconds (coroutine?)
-        state = PlayerState.pStandby;
+        state = PlayerState.Standby;
     }
 
     void pExit()

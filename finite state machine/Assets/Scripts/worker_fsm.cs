@@ -5,8 +5,9 @@ using UnityEngine;
 public class worker_fsm : MonoBehaviour
 {
 
-    enum WorkerState
+    public enum WorkerState
     {
+        Standby,
         needRepair,
         Moving,
         Repair
@@ -21,10 +22,36 @@ public class worker_fsm : MonoBehaviour
 
     void Update()
     {
-        
+        switch (state)
+        {
+            case WorkerState.Standby:
+                wStandby();
+                break;
+
+            case WorkerState.needRepair:
+                wNeedRepair();
+                break;
+
+            case WorkerState.Moving:
+                wMoving();
+                break;
+
+            case WorkerState.Repair:
+                wRepair();
+                break;
+
+            default:
+                Debug.Log("Worker Error, no state selected!");
+                break;
+        }
     }
 
-    public void CheckState()
+    public WorkerState CheckState()
+    {
+        return state;
+    }
+
+    public void wStandby()
     {
 
     }

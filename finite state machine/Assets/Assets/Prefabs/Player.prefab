@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 7043392505439568431}
   - component: {fileID: 8819324368339987172}
   - component: {fileID: 6719199176846187327}
-  - component: {fileID: 8214421505991976647}
   m_Layer: 0
   m_Name: pHead
   m_TagString: Untagged
@@ -78,19 +77,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!135 &8214421505991976647
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 17678478035554078}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3615486883470712476
 GameObject:
   m_ObjectHideFlags: 0
@@ -134,7 +120,6 @@ GameObject:
   - component: {fileID: 7257639319972061132}
   - component: {fileID: 760248919309908657}
   - component: {fileID: 2183403017382843523}
-  - component: {fileID: 679423795159416121}
   m_Layer: 0
   m_Name: pBody
   m_TagString: Untagged
@@ -201,16 +186,3 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!65 &679423795159416121
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6719998164237785165}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}

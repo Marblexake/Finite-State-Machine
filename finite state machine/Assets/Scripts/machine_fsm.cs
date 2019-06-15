@@ -41,7 +41,7 @@ public class machine_fsm : MonoBehaviour
                 break;
 
             default:
-                Debug.Log("Error - no state");
+                Debug.Log("Machine Error - no state");
                 break;
         }
     }
