@@ -95,17 +95,22 @@ public class npc_fsm : MonoBehaviour
 
     void nInUse()
     {
-        for(int i = 0; i <= machinesDone.Count; i++)
+        for(int i = 0; i < machinesDone.Count + 1; i++)
         {
             if(machinesDone.Count == 0)
             {
+                Used = false;
                 break;
             }
-            else if (machineChosen == machinesDone[i])
+            else
             {
-                Debug.Log("Machine has been used by NPC once");
-                Used = true;
-                break;
+                if (machineChosen == machinesDone[i])
+                {
+                    Debug.Log("Machine has been used by NPC once");
+                    Used = true;
+                    break;
+                }
+                    
             }
         }
 
@@ -122,6 +127,7 @@ public class npc_fsm : MonoBehaviour
             else
             {
                 machineScript.UseMachine();
+                Debug.Log("Adding machinet to machines done");
                 machinesDone.Add(machineChosen);
 
                 Used = false;
@@ -138,15 +144,20 @@ public class npc_fsm : MonoBehaviour
 
     void nUseMachine()
     {
-        Debug.Log("NPC is now using machine");
         
-        if(doingSomething == false)
+        
+        if(doingSomething == false && useTime < 8)
         {
+            Debug.Log("NPC is now using machine");
             StartCoroutine(StartUsage());
             doingSomething = true;
         }
 
-        state = NPCState.Standby;
+        if(useTime >= 8)
+        {
+            state = NPCState.Standby;
+        }
+        
     }
 
     void Exit()

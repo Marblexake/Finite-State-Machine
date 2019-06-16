@@ -39,7 +39,7 @@ public class player_fsm : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        StartCoroutine(CurrentState());
+        //StartCoroutine(CurrentState());
 
         machineDone = new List<GameObject>();
 
