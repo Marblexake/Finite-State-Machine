@@ -15,16 +15,18 @@ public class npc_fsm : MonoBehaviour
 
     NPCState state;
 
-    
-    private List<GameObject> machinesDone;
-    public GameObject[] MachinesChoice;
+    //testing
+    private int elapsedTime = 0;
+    private int mention = 0;
+
+    private int machinesDone = 0;
+    public List<GameObject> MachinesChoice;
 
     private bool doingSomething;
 
     // InUse variables
     private int rand;
     private GameObject machineChosen;
-    private bool Used;
     private machine_fsm machineScript;
 
     // Coroutines
@@ -33,9 +35,7 @@ public class npc_fsm : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        machinesDone = new List<GameObject>();
-
-        StartCoroutine(CurrentState());
+        // StartCoroutine(CurrentState());
     }
 
     void Update()
@@ -85,7 +85,7 @@ public class npc_fsm : MonoBehaviour
     void nChooseMachine()
     {
         Debug.Log("NPC is choosing machine...");
-        rand = Random.Range(0, 8);
+        rand = Random.Range(0, MachinesChoice.Count);
 
         machineChosen = MachinesChoice[rand];
         Debug.Log("NPC has chosen " + machineChosen);
@@ -95,80 +95,68 @@ public class npc_fsm : MonoBehaviour
 
     void nInUse()
     {
-        for(int i = 0; i < machinesDone.Count + 1; i++)
-        {
-            if(machinesDone.Count == 0)
-            {
-                Used = false;
-                break;
-            }
-            else
-            {
-                if (machineChosen == machinesDone[i])
-                {
-                    Debug.Log("Machine has been used by NPC once");
-                    Used = true;
-                    break;
-                }
-                    
-            }
-        }
-
         machineScript = machineChosen.GetComponent<machine_fsm>();
 
-        if (!Used)
+        // Checks if current state of machine is "InUse", if it is, npc can't use, else use the machine
+        if (machineScript.CheckState() == machine_fsm.MachineState.InUse)
         {
-            if (machineScript.CheckState() == machine_fsm.MachineState.InUse)
-            {
-                Debug.Log("NPC can't use machine, it is in use");
+            Debug.Log("NPC can't use machine, it is in use");
 
-                state = NPCState.Standby;
-            }
-            else
-            {
-                machineScript.UseMachine();
-                Debug.Log("Adding machinet to machines done");
-                machinesDone.Add(machineChosen);
-
-                Used = false;
-                state = NPCState.UseMachine;
-            }
-
+            state = NPCState.Standby;
         }
         else
         {
-            Used = false;
-            state = NPCState.Standby;
+            Debug.Log("Machines done by npc " + machinesDone);
+            machinesDone += 1;
+
+            // Calls the NPC's method in machine_fsm script
+            machineScript.NPCUseMachine();
+
+            // removes the machine from the list of possible machines to use
+            Debug.Log("removing machine from list");
+            MachinesChoice.Remove(machineChosen);
+
+            // State transition to useMachine state
+            state = NPCState.UseMachine;
         }
     }
 
     void nUseMachine()
     {
-        
-        
-        if(doingSomething == false && useTime < 8)
+        //Debug.Log("npc UseMachine: " + doingSomething + " and useTime: " + useTime);
+        //if (doingSomething == false && useTime < 8)
+        //{
+        //    Debug.Log("NPC is now using machine " + "doingSomething is: " + doingSomething);
+        //    StartCoroutine(StartUsage());
+        //    doingSomething = true;
+        //}
+
+        //if (useTime >= 8)
+        //{
+        //    state = NPCState.Standby;
+        //}
+        if (doingSomething == false)
         {
-            Debug.Log("NPC is now using machine");
             StartCoroutine(StartUsage());
             doingSomething = true;
         }
 
-        if(useTime >= 8)
-        {
-            state = NPCState.Standby;
-        }
-        
     }
 
     void Exit()
     {
-        Debug.Log("NPC is exiting");
+        if(mention == 0)
+        {
+            Debug.Log("NPC is exiting");
+            mention += 1;
+        }
+        
         // Go to the exit of the gym and destroy itself
     }
 
     bool IsDone()
     {
-        if(machinesDone.Count > 2)
+        if (machinesDone > 2)
         {
             return true;
         }
@@ -180,6 +168,11 @@ public class npc_fsm : MonoBehaviour
     {
         // This function is here to force the whole script to wait for the MachineInUse() coroutine to run its entire course
         yield return StartCoroutine(MachineInUse());
+
+        Debug.Log("StartUsage() useTime: " + useTime);
+        
+        state = NPCState.Standby;
+
     }
 
     IEnumerator MachineInUse()
@@ -190,15 +183,15 @@ public class npc_fsm : MonoBehaviour
             if (useTime < 8)
             {
                 // if usage time is less than 8, add 1 to it, then wait for 1 second
-                useTime += 1;
+                useTime += 2;
                 Debug.Log("NPC script time: " + useTime);
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(2f);
             }
             else
             {
                 // This runs when useTime > 8
-                Debug.Log("NPC Machine usage is now done");
-                // Resets the counter and then break the loop, effectively ending this coroutine
+                Debug.Log("NPC Machine usage is now done, useTime: " + useTime);
+                // Resets the counter and then break the loop, effectively ending this coroutine 
                 doingSomething = false;
                 useTime = 0;
                 yield break;
@@ -210,7 +203,9 @@ public class npc_fsm : MonoBehaviour
     {
         for (; ; )
         {
-            Debug.Log(state);
+            //elapsedTime += 1;
+            //Debug.Log(elapsedTime);
+            Debug.Log("NPC state: " + state);
             yield return new WaitForSeconds(1);
         }
     }
