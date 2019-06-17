@@ -19,6 +19,7 @@ public class PlayerController : MonoBehaviour
 
             if(Physics.Raycast(ray, out hit))
             {
+                Debug.Log(hit.point);
                 agent.SetDestination(hit.point);
             }
         }

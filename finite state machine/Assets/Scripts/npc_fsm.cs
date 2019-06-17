@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class npc_fsm : MonoBehaviour
 {
@@ -9,37 +10,40 @@ public class npc_fsm : MonoBehaviour
         Standby,
         ChooseMachine,
         InUse,
-        UseMachine,
-        Exit
+        UseMachine
     }
 
-    NPCState state;
+    NPCState state;                                     // The var containing the enum, and the "State" this FSM is in right now
 
-    //testing
-    private int elapsedTime = 0;
-    private int mention = 0;
+    public NavMeshAgent NPC_Agent;                      // Reference to the NPC's NavMeshAgent
+    public GameObject StandByArea;                      // Reference to the yellow mat in the middle of the game level
+                    
+    public List<GameObject> MachinesChoice;             // Reference to the list of machines the NPC can use
 
-    private int machinesDone = 0;
-    public List<GameObject> MachinesChoice;
-
-    private bool doingSomething;
+    private bool doingSomething;                        // This is a boolean that determines if the script is "doing something or not"
 
     // InUse variables
-    private int rand;
-    private GameObject machineChosen;
-    private machine_fsm machineScript;
+    private int rand;                                   // Contains a pseudo-random number to determine the next state
+    private GameObject machineChosen;                   // Reference to the machine chosen randomly by the NPC
+    private machine_fsm machineScript;                  // Reference to the script on said machine
+    private GameObject machineCollided;                 // Reference to the machine this object has collided with
 
     // Coroutines
-    private int useTime;
+    private int useTime;                                // Variable integer that holds the usage time of the machine
 
     // Start is called before the first frame update
     void Start()
     {
+        // Testing purposes
         // StartCoroutine(CurrentState());
+
+        // Enter state
+        state = NPCState.Standby;
     }
 
     void Update()
     {
+        // Switch-Functions FSM style
         switch (state)
         {
             case NPCState.Standby:
@@ -54,9 +58,7 @@ public class npc_fsm : MonoBehaviour
             case NPCState.UseMachine:
                 nUseMachine();
                 break;
-            case NPCState.Exit:
-                Exit();
-                break;
+
             default:
                 Debug.Log("NPC Error - No State!");
                 break;
@@ -64,31 +66,41 @@ public class npc_fsm : MonoBehaviour
         }
     }
 
+    // To be called by other classes - returns the current state of the player
     public NPCState CheckState()
     {
         return state;
     }
 
+    // Default idle state
     void nStandby()
     {
-        if (IsDone())
+        // Checks if the script is doing something at the moment
+        if (MachinesChoice.Count != 0)
         {
-            state = NPCState.Exit;
+            state = NPCState.ChooseMachine;
         }
         else
         {
-            state = NPCState.ChooseMachine;
+            // This triggers idle functions, where the character just moves around a set area randomly
+            if (doingSomething == false)
+            {
+                StartCoroutine(StartIdle());
+                doingSomething = true;
+            }
+            
         }
 
     }
 
+    // Chooses the random machine this npc is going to do
     void nChooseMachine()
     {
-        Debug.Log("NPC is choosing machine...");
+        // Contains a random number
         rand = Random.Range(0, MachinesChoice.Count);
 
+        // Random machine from index
         machineChosen = MachinesChoice[rand];
-        Debug.Log("NPC has chosen " + machineChosen);
 
         state = NPCState.InUse;
     }
@@ -97,24 +109,22 @@ public class npc_fsm : MonoBehaviour
     {
         machineScript = machineChosen.GetComponent<machine_fsm>();
 
+
         // Checks if current state of machine is "InUse", if it is, npc can't use, else use the machine
         if (machineScript.CheckState() == machine_fsm.MachineState.InUse)
         {
-            Debug.Log("NPC can't use machine, it is in use");
 
+            state = NPCState.Standby;
+        }
+        // Checks if the machine is under repair or broken
+        else if (machineScript.CheckState() == machine_fsm.MachineState.Repair || machineScript.CheckState() == machine_fsm.MachineState.Broken)
+        {
             state = NPCState.Standby;
         }
         else
         {
-            Debug.Log("Machines done by npc " + machinesDone);
-            machinesDone += 1;
-
-            // Calls the NPC's method in machine_fsm script
-            machineScript.NPCUseMachine();
-
-            // removes the machine from the list of possible machines to use
-            Debug.Log("removing machine from list");
-            MachinesChoice.Remove(machineChosen);
+            // Moves the NPC to the machine to be used
+            Moving(machineChosen);
 
             // State transition to useMachine state
             state = NPCState.UseMachine;
@@ -123,54 +133,41 @@ public class npc_fsm : MonoBehaviour
 
     void nUseMachine()
     {
-        //Debug.Log("npc UseMachine: " + doingSomething + " and useTime: " + useTime);
-        //if (doingSomething == false && useTime < 8)
-        //{
-        //    Debug.Log("NPC is now using machine " + "doingSomething is: " + doingSomething);
-        //    StartCoroutine(StartUsage());
-        //    doingSomething = true;
-        //}
-
-        //if (useTime >= 8)
-        //{
-        //    state = NPCState.Standby;
-        //}
-        if (doingSomething == false)
+        // Checks if the collided object is the same as the object hit by the ray, and also if script is doing anything
+        if (machineCollided == machineChosen && doingSomething == false)
         {
+            // Starts the NPC usage of the machine
             StartCoroutine(StartUsage());
             doingSomething = true;
         }
 
     }
 
-    void Exit()
+    // Moves NPC to the randomly chosen machine
+    void Moving(GameObject machineSelected)
     {
-        if(mention == 0)
-        {
-            Debug.Log("NPC is exiting");
-            mention += 1;
-        }
-        
-        // Go to the exit of the gym and destroy itself
+        NPC_Agent.SetDestination(machineSelected.transform.position);
     }
 
-    bool IsDone()
+    // Detects when the collider on the character has hit something and sets a reference to it
+    private void OnTriggerEnter(Collider other)
     {
-        if (machinesDone > 2)
-        {
-            return true;
-        }
+        machineCollided = other.gameObject;
 
-        return false;
     }
 
     IEnumerator StartUsage()
     {
+        // Removes the machine the NPC used
+        MachinesChoice.Remove(machineChosen);
+
+        // Calls the NPC's method in machine_fsm script
+        machineScript.NPCUseMachine();
+
         // This function is here to force the whole script to wait for the MachineInUse() coroutine to run its entire course
         yield return StartCoroutine(MachineInUse());
 
-        Debug.Log("StartUsage() useTime: " + useTime);
-        
+
         state = NPCState.Standby;
 
     }
@@ -184,13 +181,11 @@ public class npc_fsm : MonoBehaviour
             {
                 // if usage time is less than 8, add 1 to it, then wait for 1 second
                 useTime += 2;
-                Debug.Log("NPC script time: " + useTime);
                 yield return new WaitForSeconds(2f);
             }
             else
             {
                 // This runs when useTime > 8
-                Debug.Log("NPC Machine usage is now done, useTime: " + useTime);
                 // Resets the counter and then break the loop, effectively ending this coroutine 
                 doingSomething = false;
                 useTime = 0;
@@ -199,12 +194,31 @@ public class npc_fsm : MonoBehaviour
         }
     }
 
+    IEnumerator StartIdle()
+    {
+        // This function is here to force the whole script to wait for the MachineInUse() coroutine to run its entire course
+        yield return StartCoroutine(Idle());
+
+        doingSomething = false;
+
+    }
+
+    IEnumerator Idle()
+    {
+        for (; ; )
+        {
+            // These code causes the character to move to random points on the stand by area every 3 seconds
+            NPC_Agent.SetDestination(StandByArea.transform.position + new Vector3(Random.Range(-2, 3), Random.Range(-2, 3), Random.Range(-2, 3)));
+            yield return new WaitForSeconds(3);
+            yield break;
+        }
+    }
+
+    // Testing purposes
     IEnumerator CurrentState()
     {
         for (; ; )
         {
-            //elapsedTime += 1;
-            //Debug.Log(elapsedTime);
             Debug.Log("NPC state: " + state);
             yield return new WaitForSeconds(1);
         }
