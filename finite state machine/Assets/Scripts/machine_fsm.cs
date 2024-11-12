@@ -23,10 +23,15 @@ public class machine_fsm : MonoBehaviour
 
     public bool player_used;                            // Determines if the player has this particular gameObject machine
 
+    private GameObject textObject;
+    public GameObject textPrefab;
+
     private void Start()
     {
         // Enter state
-        state = MachineState.Standby;                   
+        state = MachineState.Standby;
+
+        textObject = Instantiate(textPrefab, transform.position, transform.rotation);
 
         // Setting reference to the worker in the game scene
         worker = GameObject.Find("Worker").GetComponent<worker_fsm>();
@@ -34,23 +39,38 @@ public class machine_fsm : MonoBehaviour
 
     void Update()
     {
+        Transform textTrans = textObject.GetComponent<Transform>();
+        textTrans.position = transform.position;
+        textTrans.Translate(Vector3.up * 1.0f);
+        textTrans.Translate(Vector3.left * 1.5f);
+
+        StateTextScript textScript = textObject.GetComponent<StateTextScript>();
+
         // Switch-Functions FSM style
         switch (state)
         {
             case MachineState.Standby:
                 mStandBy();
+                                textScript.UpdateStateText("Current State: Standby");
+
                 break;
 
             case MachineState.InUse:
                 mInUse();
+                                textScript.UpdateStateText("Current State: In Use");
+
                 break;
 
             case MachineState.Broken:
                 mBroken();
+                                textScript.UpdateStateText("Current State: Broken");
+
                 break;
 
             case MachineState.Repair:
                 mRepair();
+                                textScript.UpdateStateText("Current State: Repair");
+
                 break;
 
             default:

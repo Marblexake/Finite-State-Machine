@@ -18,6 +18,7 @@ public class player_fsm : MonoBehaviour
         Injury,
         FirstAid,
         Hospital,
+        Moving,
         Exit
     }
 
@@ -58,6 +59,10 @@ public class player_fsm : MonoBehaviour
     private Camera mainCam;                                     // Reference to main cam
     private bool doingSomething;                                // This is a boolean that determines if the script is "doing something or not"
 
+    private GameObject textObject;
+    public GameObject textPrefab;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -65,6 +70,8 @@ public class player_fsm : MonoBehaviour
         Done = 0;
         // Testing pirposes
         // StartCoroutine(CurrentState());
+
+        textObject = Instantiate(textPrefab, transform.position, transform.rotation);
 
         // Reference to Image for hospital background
         image = hospitalUI.GetComponent<Image>();
@@ -79,6 +86,12 @@ public class player_fsm : MonoBehaviour
 
     private void Update()
     {
+        Transform textTrans = textObject.GetComponent<Transform>();
+        textTrans.position = transform.position;
+        textTrans.Translate(Vector3.up * 0.7f);
+        textTrans.Translate(Vector3.left * 1.5f);
+
+        StateTextScript textScript = textObject.GetComponent<StateTextScript>();
 
         // Runs every frame, checks if the player has clicked, and if he did, return what he clicked.
         machineHitByRay = machineHit();
@@ -88,34 +101,52 @@ public class player_fsm : MonoBehaviour
         {
             case PlayerState.Standby:
                 pStandBy();
-                break;
+                                textScript.UpdateStateText("Current State: Standby");
 
+                break;
+            case PlayerState.Moving:
+                pUseMachine();
+                                textScript.UpdateStateText("Current State: Moving");
+
+                break;
             case PlayerState.InUse:
                 pInUse(machineHitByRay);
+                textScript.UpdateStateText("Current State: InUse");
                 break;
 
             case PlayerState.UseMachine:
-                pUseMachine();
+                            textScript.UpdateStateText("Current State: UseMachine");
+
                 break;
 
             case PlayerState.Tired:
                 pTired();
+                                textScript.UpdateStateText("Current State: Tired");
+
                 break;
 
             case PlayerState.GetFood:
                 pGetFood();
+                                textScript.UpdateStateText("Current State: GetFood");
+
                 break;
 
             case PlayerState.Eat:
                 pEat();
+                                textScript.UpdateStateText("Current State: Eat");
+
                 break;
 
             case PlayerState.Injury:
                 pInjury();
+                                textScript.UpdateStateText("Current State: Injury");
+
                 break;
 
             case PlayerState.FirstAid:
                 pFirstAid();
+                                textScript.UpdateStateText("Current State: FirstAid");
+
                 break;
 
             case PlayerState.Exit:
@@ -124,6 +155,8 @@ public class player_fsm : MonoBehaviour
 
             case PlayerState.Hospital:
                 pHospital();
+                                textScript.UpdateStateText("Current State: Hospital");
+
                 break;
 
             default:
@@ -210,7 +243,7 @@ public class player_fsm : MonoBehaviour
                 {
                     // Moves the character to the machine
                     Moving(machineSelected);
-                    state = PlayerState.UseMachine;
+                    state = PlayerState.Moving;
                 }
             }
 
@@ -225,6 +258,8 @@ public class player_fsm : MonoBehaviour
             // Starts the player usage of the machine
             StartCoroutine(PlayerStartUsage());
             doingSomething = true;
+
+            state = PlayerState.UseMachine;
         }
 
     }

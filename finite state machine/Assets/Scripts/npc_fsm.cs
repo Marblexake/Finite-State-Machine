@@ -10,7 +10,8 @@ public class npc_fsm : MonoBehaviour
         Standby,
         ChooseMachine,
         InUse,
-        UseMachine
+        UseMachine,
+        Moving
     }
 
     NPCState state;                                     // The var containing the enum, and the "State" this FSM is in right now
@@ -28,6 +29,9 @@ public class npc_fsm : MonoBehaviour
     private machine_fsm machineScript;                  // Reference to the script on said machine
     private GameObject machineCollided;                 // Reference to the machine this object has collided with
 
+    private GameObject textObject; 
+    public GameObject textPrefab;
+
     // Coroutines
     private int useTime;                                // Variable integer that holds the usage time of the machine
 
@@ -37,28 +41,43 @@ public class npc_fsm : MonoBehaviour
         // Testing purposes
         // StartCoroutine(CurrentState());
 
+        textObject = Instantiate(textPrefab, transform.position, transform.rotation);
+
         // Enter state
         state = NPCState.Standby;
     }
 
     void Update()
     {
+        Transform textTrans = textObject.GetComponent<Transform>();
+        textTrans.position = transform.position;
+        textTrans.Translate(Vector3.up * 1.0f);
+        textTrans.Translate(Vector3.left * 1.5f);
+
+        StateTextScript textScript = textObject.GetComponent<StateTextScript>();
+
         // Switch-Functions FSM style
         switch (state)
         {
+            case NPCState.Moving:
+                textScript.UpdateStateText("Current State: Moving");
+                nUseMachine();
+                break;
             case NPCState.Standby:
                 nStandby();
+                textScript.UpdateStateText("Current State: Standby");
                 break;
             case NPCState.ChooseMachine:
                 nChooseMachine();
+                textScript.UpdateStateText("Current State: ChooseMachine");
                 break;
             case NPCState.InUse:
                 nInUse();
+                textScript.UpdateStateText("Current State: InUse");
                 break;
             case NPCState.UseMachine:
-                nUseMachine();
+                textScript.UpdateStateText("Current State: UseMachine");
                 break;
-
             default:
                 Debug.Log("NPC Error - No State!");
                 break;
@@ -127,7 +146,7 @@ public class npc_fsm : MonoBehaviour
             Moving(machineChosen);
 
             // State transition to useMachine state
-            state = NPCState.UseMachine;
+            state = NPCState.Moving;
         }
     }
 
@@ -139,6 +158,8 @@ public class npc_fsm : MonoBehaviour
             // Starts the NPC usage of the machine
             StartCoroutine(StartUsage());
             doingSomething = true;
+
+            state = NPCState.UseMachine;
         }
 
     }

@@ -11,7 +11,7 @@ public class worker_fsm : MonoBehaviour
         Standby,
         needRepair,
         Moving,
-        Repair
+        RepairMachine
     }
 
     WorkerState state;                              // The var containing the enum, and the "State" this FSM is in right now
@@ -28,11 +28,15 @@ public class worker_fsm : MonoBehaviour
         
     private int once = 0;
 
+    private GameObject textObject;
+    public GameObject textPrefab;
+
     // Start is called before the first frame update
     void Start()
     {
         // Testing purposes
         // StartCoroutine(CurrentState());
+        textObject = Instantiate(textPrefab, transform.position, transform.rotation);
 
         // Enter state
         state = WorkerState.Standby;
@@ -40,19 +44,31 @@ public class worker_fsm : MonoBehaviour
 
     void Update()
     {
+        Transform textTrans = textObject.GetComponent<Transform>();
+        textTrans.position = transform.position;
+        textTrans.Translate(Vector3.up * 0.7f);
+        textTrans.Translate(Vector3.left * 1.5f);
+
+        StateTextScript textScript = textObject.GetComponent<StateTextScript>();
+
         // Switch-Functions FSM style
         switch (state)
         {
             case WorkerState.Standby:
                 wStandby();
+                textScript.UpdateStateText("Current State: Standby");
                 break;
 
             case WorkerState.needRepair:
                 wNeedRepair();
+                textScript.UpdateStateText("Current State: NeedRepair");
                 break;
-
-            case WorkerState.Repair:
+            case WorkerState.Moving:
                 wRepair();
+                textScript.UpdateStateText("Current State: Moving");
+                break;
+            case WorkerState.RepairMachine:
+                textScript.UpdateStateText("Current State: RepairMachine");
                 break;
 
             default:
@@ -83,7 +99,7 @@ public class worker_fsm : MonoBehaviour
     void wNeedRepair()
     {
 
-        state = WorkerState.Repair;
+        state = WorkerState.Moving;
 
         // Charts a path from current position to the machine that needs repair
         WorkerAgent.SetDestination(machineCalled.transform.position);
@@ -101,6 +117,7 @@ public class worker_fsm : MonoBehaviour
 
             // Sets the script to be now "doing something"
             doingSomething = true;
+            state = WorkerState.RepairMachine;
         }
 
     }
