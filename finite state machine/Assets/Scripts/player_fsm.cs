@@ -86,6 +86,17 @@ public class player_fsm : MonoBehaviour
 
     private void Update()
     {
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
+
+        if(Input.GetKeyDown(KeyCode.F11))
+        {
+            Screen.fullScreen = !Screen.fullScreen;
+        }
+
+
         Transform textTrans = textObject.GetComponent<Transform>();
         textTrans.position = transform.position;
         textTrans.Translate(Vector3.up * 0.7f);
